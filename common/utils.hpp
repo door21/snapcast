@@ -19,8 +19,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#ifndef ESP_PLATFORM
 #include "common/str_compat.hpp"
 #include "common/utils/string_utils.hpp"
+#else
+#include <str_compat.hpp>
+#include <utils/string_utils.hpp>
+#endif
 
 #include <cctype>
 #include <cerrno>
@@ -32,7 +37,9 @@
 #include <iterator>
 #include <locale>
 #include <memory>
+#ifndef ESP_PLATFORM
 #include <net/if.h>
+#endif
 #include <netinet/in.h>
 #include <sstream>
 #include <string>
@@ -42,9 +49,13 @@
 #include <unistd.h>
 #include <vector>
 #ifndef FREEBSD
+#ifndef ESP_PLATFORM
 #include <sys/sysinfo.h>
 #endif
+#endif
+#ifndef ESP_PLATFORM
 #include <sys/utsname.h>
+#endif
 #ifdef MACOS
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/IOTypes.h>
@@ -54,7 +65,10 @@
 #ifdef ANDROID
 #include <sys/system_properties.h>
 #endif
-
+#ifdef ESP_PLATFORM
+#include <tcpip_adapter.h>
+#include <esp_timer.h>
+#endif
 
 namespace strutils = utils::string;
 
@@ -62,6 +76,7 @@ namespace strutils = utils::string;
 
 static std::string execGetOutput(const std::string& cmd)
 {
+    #ifndef ESP_PLATFORM
     std::shared_ptr<FILE> pipe(popen((cmd + " 2> /dev/null").c_str(), "r"), pclose);
     if (!pipe)
         return "";
@@ -73,6 +88,8 @@ static std::string execGetOutput(const std::string& cmd)
             result += buffer;
     }
     return strutils::trim(result);
+    #endif
+    return "";
 }
 
 
@@ -91,13 +108,18 @@ static std::string getProp(const std::string& key, const std::string& def = "")
 static std::string getOS()
 {
     std::string os;
+
 #ifdef ANDROID
     os = strutils::trim_copy("Android " + getProp("ro.build.version.release"));
 #else
+#ifndef ESP_PLATFORM
     os = execGetOutput("lsb_release -d");
     if ((os.find(":") != std::string::npos) && (os.find("lsb_release") == std::string::npos))
         os = strutils::trim_copy(os.substr(os.find(":") + 1));
 #endif
+#endif
+
+#ifndef ESP_PLATFORM
     if (os.empty())
     {
         os = strutils::trim_copy(execGetOutput("grep /etc/os-release /etc/openwrt_release -e PRETTY_NAME -e DISTRIB_DESCRIPTION"));
@@ -114,21 +136,33 @@ static std::string getOS()
         uname(&u);
         os = u.sysname;
     }
+#else
+    os = "esp-idf";
+#endif
     return strutils::trim_copy(os);
 }
 
 
 static std::string getHostName()
 {
+#ifdef ESP_PLATFORM
+    const char *hostname = NULL;
+    if(tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_STA, &hostname)){
+        return NULL;
+    }
+    return hostname;
+#endif
 #ifdef ANDROID
     std::string result = getProp("net.hostname");
     if (!result.empty())
         return result;
 #endif
+#ifndef ESP_PLATFORM
     char hostname[1024];
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
     return hostname;
+#endif
 }
 
 
@@ -152,9 +186,15 @@ static std::string getArch()
 static long uptime()
 {
 #ifndef FREEBSD
+#ifdef ESP_PLATFORM
+    int64_t t = esp_timer_get_time(); // uptime in microseconds
+    long uptime = (long)(t/1000000);
+    return uptime;
+#else
     struct sysinfo info;
     sysinfo(&info);
     return info.uptime;
+#endif
 #else
     std::string uptime = execGetOutput("sysctl kern.boottime");
     if ((uptime.find(" sec = ") != std::string::npos) && (uptime.find(",") != std::string::npos))
@@ -196,6 +236,15 @@ static std::string generateUUID()
 /// https://gist.github.com/OrangeTide/909204
 static std::string getMacAddress(int sock)
 {
+#ifdef ESP_PLATFORM
+    uint8_t mac[6];
+    static char macstr[19];
+    if(esp_read_mac(mac, ESP_MAC_WIFI_STA) != ESP_OK) {
+        memset(mac, 0, sizeof(mac));
+    }
+    sprintf(macstr, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return macstr;
+#else
     struct ifreq ifr;
     struct ifconf ifc;
     char buf[16384];
@@ -297,6 +346,7 @@ static std::string getMacAddress(int sock)
             (unsigned char)ifr.ifr_ifru.ifru_addr.sa_data[4], (unsigned char)ifr.ifr_ifru.ifru_addr.sa_data[5]);
 #endif
     return mac;
+#endif // ESP32
 }
 
 

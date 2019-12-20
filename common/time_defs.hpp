@@ -27,6 +27,10 @@
 #include <mach/mach.h>
 #endif
 
+#ifdef ESP_PLATFORM
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#endif
 namespace chronos
 {
 typedef std::chrono::system_clock clk;
@@ -104,9 +108,13 @@ inline void sleep(const std::chrono::duration<Rep, Period>& sleep_duration)
 
 inline void sleep(const int32_t& milliseconds)
 {
+    #ifdef ESP_PLATFORM
+    vTaskDelay(milliseconds/portTICK_PERIOD_MS);
+    #else
     if (milliseconds < 0)
         return;
     sleep(msec(milliseconds));
+    #endif
 }
 
 inline void usleep(const int32_t& microseconds)
