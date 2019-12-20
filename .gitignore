@@ -55,3 +55,6 @@ debian/snapserver.postinst.debhelper
 debian/snapserver.postrm.debhelper
 debian/snapserver.prerm.debhelper
 debian/snapserver.substvars
+
+# VS Code workspaces
+**.code-workspace
