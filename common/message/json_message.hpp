@@ -19,7 +19,11 @@
 #ifndef JSON_MESSAGE_H
 #define JSON_MESSAGE_H
 
+#ifndef ESP_PLATFORM
 #include "common/json.hpp"
+#else
+#include <json.hpp>
+#endif
 #include "message.hpp"
 
 

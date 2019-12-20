@@ -19,8 +19,11 @@
 #ifndef METADATA_H
 #define METADATA_H
 
+#ifndef ESP_PLATFORM
 #include "common/json.hpp"
-
+#else
+#include <json.hpp>
+#endif
 // Prefix used in output
 #define METADATA std::string("metadata")
 

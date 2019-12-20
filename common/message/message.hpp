@@ -19,8 +19,13 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#ifndef ESP_PLATFORM
 #include "common/endian.hpp"
 #include "common/time_defs.hpp"
+#else
+#include <endian.hpp>
+#include <time_defs.hpp>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <iostream>

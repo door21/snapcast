@@ -19,7 +19,11 @@
 #ifndef PCM_CHUNK_H
 #define PCM_CHUNK_H
 
+#ifndef ESP_PLATFORM
 #include "common/sample_format.hpp"
+#else
+#include <sample_format.hpp>
+#endif
 #include "message.hpp"
 #include "wire_chunk.hpp"
 #include <chrono>

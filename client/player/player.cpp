@@ -19,7 +19,11 @@
 #include <cmath>
 #include <iostream>
 
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
+#else
+#include <aixlog.hpp>
+#endif
 #include "player.hpp"
 
 

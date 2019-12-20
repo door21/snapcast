@@ -18,9 +18,15 @@
 
 #ifndef DECODER_H
 #define DECODER_H
+#ifndef ESP_PLATFORM
 #include "common/sample_format.hpp"
 #include "message/codec_header.hpp"
 #include "message/pcm_chunk.hpp"
+#else
+#include <sample_format.hpp>
+#include <message/codec_header.hpp>
+#include <message/pcm_chunk.hpp>
+#endif
 #include <mutex>
 
 namespace decoder

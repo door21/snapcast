@@ -14,7 +14,7 @@
 #include <aixlog.hpp>
 
 #include "snapcast-client.hpp"
-//#include "controller.hpp"
+#include "controller.hpp"
 
 
 #include "secrets.h"
@@ -58,7 +58,6 @@ void wifi_connect_func(void *pvParams){
 
 //static Controller controller("esp32-hostid", 1, NULL);
 void run_connection_func(void *pv){
-      //AixLog::Log::init<AixLog::SinkEsp32Logging>("snapclient", AixLog::Severity::trace, AixLog::Type::all);
 
    while(true){
       xEventGroupWaitBits(eventGroup, EVENT_GROUP_WIFI_CONNECTED, pdTRUE, pdTRUE, portMAX_DELAY);
@@ -83,17 +82,12 @@ int app_main(void)
    xEventGroupClearBits(eventGroup, 0xff);
    nvs_flash_init();
    tcpip_adapter_init();
-   //AixLog::Log::init<AixLog::SinkEsp32Logging>("snapclient", AixLog::Severity::trace, AixLog::Type::all);
-   //AixLog::Log::instance().add_logsink<AixLog::SinkEsp32Logging>("snapclient2", AixLog::Severity::trace, AixLog::Type::all);
-   // LOG(ERROR) << "TESTING LOGS ERROR\n\n";
-   // LOG(WARNING) << "TESTING LOGS WARNING";
-   // LOG(INFO) << "Testing Logs info";
-   // LOG(TRACE) << "Testing logs trace";
+   AixLog::Log::init<AixLog::SinkEsp32Logging>("snapclient", AixLog::Severity::trace, AixLog::Type::all);
    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
    TaskHandle_t wifi_task, run_task, disconnect_task;
    xTaskCreate(wifi_connect_func, "wifi_connect", 8192, NULL, 5, &wifi_task);
    xTaskCreate(run_connection_func, "run_connection", 8192, NULL, 5, &run_task);
    xTaskCreate(disconnect_func, "disconnect", 8192, NULL, 5, &disconnect_task);
-   // SLOG(NOTICE) << "daemon started" << std::endl;
+   SLOG(NOTICE) << "daemon started" << std::endl;
    return 0;
 }

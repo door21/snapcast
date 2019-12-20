@@ -19,8 +19,13 @@
 #ifndef STREAM_H
 #define STREAM_H
 
+#ifndef ESP_PLATFORM
 #include "common/queue.h"
 #include "common/sample_format.hpp"
+#else
+#include <snap_queue.h>
+#include <sample_format.hpp>
+#endif
 #include "double_buffer.hpp"
 #include "message/message.hpp"
 #include "message/pcm_chunk.hpp"

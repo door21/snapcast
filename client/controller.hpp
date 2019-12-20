@@ -32,6 +32,8 @@
 #include "player/opensl_player.hpp"
 #elif HAS_COREAUDIO
 #include "player/coreaudio_player.hpp"
+#elif ESP_PLATFORM
+#include <esp32_player.hpp>
 #endif
 #include "client_connection.hpp"
 #include "metadata.hpp"

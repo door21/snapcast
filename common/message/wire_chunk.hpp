@@ -19,7 +19,11 @@
 #ifndef WIRE_CHUNK_H
 #define WIRE_CHUNK_H
 
+#ifndef ESP_PLATFORM
 #include "common/time_defs.hpp"
+#else
+#include <time_defs.hpp>
+#endif
 #include "message.hpp"
 #include <chrono>
 #include <cstdlib>

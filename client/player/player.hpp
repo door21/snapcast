@@ -19,8 +19,13 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
 #include "common/endian.hpp"
+#else
+#include <aixlog.hpp>
+#include <endian.hpp>
+#endif
 #include "pcm_device.hpp"
 #include "stream.hpp"
 #include <atomic>

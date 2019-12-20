@@ -19,10 +19,18 @@
 #ifndef CLIENT_CONNECTION_H
 #define CLIENT_CONNECTION_H
 
+#ifndef ESP_PLATFORM
 #include "common/time_defs.hpp"
+#else
+#include <time_defs.hpp>
+#endif
 #include "message/message.hpp"
 #include <atomic>
+#ifndef ESP_PLATFORM
 #include <boost/asio.hpp>
+#else
+#include <asio.hpp>
+#endif
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -30,8 +38,14 @@
 #include <string>
 #include <thread>
 
+#ifdef ESP_PLATFORM
+#define ASIO_NS asio
+#else
+#define ASIO_NS boost::asio
+#endif
 
-using boost::asio::ip::tcp;
+
+using ASIO_NS::ip::tcp;
 
 
 class ClientConnection;
@@ -106,7 +120,7 @@ protected:
     void socketRead(void* to, size_t bytes);
     void getNextMessage();
 
-    boost::asio::io_context io_context_;
+    ASIO_NS::io_context io_context_;
     mutable std::mutex socketMutex_;
     tcp::socket socket_;
     std::atomic<bool> active_;
