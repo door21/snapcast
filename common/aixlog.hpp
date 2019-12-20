@@ -19,7 +19,7 @@
 #ifndef AIX_LOG_HPP
 #define AIX_LOG_HPP
 
-#ifndef _WIN32
+#if ! defined(_WIN32) && ! defined(ESP_PLATFORM)
 #define HAS_SYSLOG_ 1
 #endif
 
@@ -64,6 +64,10 @@
 
 #ifdef HAS_SYSLOG_
 #include <syslog.h>
+#endif
+
+#ifdef ESP_PLATFORM
+#include <esp_log.h>
 #endif
 
 #ifdef __ANDROID__
@@ -760,6 +764,44 @@ struct SinkUnifiedLogging : public Sink
     }
 };
 #endif
+#ifdef ESP_PLATFORM
+struct SinkEsp32Logging : public Sink
+{
+    const char* tag_;
+    SinkEsp32Logging(const char * tag, Severity severity, Type type = Type::all): Sink(severity, type), tag_(tag)
+    {
+        
+    }
+    void log(const Metadata& metadata, const std::string &message) override
+    {        
+        switch(metadata.severity)
+        {
+            case Severity::trace:
+                ESP_LOGV(tag_, "%s", (message.c_str()));
+                break;
+            case Severity::debug:
+                ESP_LOGD(tag_, "%s", (message.c_str()));
+                break;
+            case Severity::info:
+            case Severity::notice:
+                ESP_LOGI(tag_, "%s", (message.c_str()));
+                break;
+            case Severity::warning:
+                ESP_LOGW(tag_, "%s", (message.c_str()));
+                break;
+            case Severity::error:
+            case Severity::fatal:
+                ESP_LOGE(tag_, "%s", (message.c_str()));
+                break;
+
+            default:
+                ESP_LOGI(tag_, "foo");
+        }
+    }
+};
+#endif
+
+
 
 #ifdef HAS_SYSLOG_
 /**
@@ -989,7 +1031,11 @@ private:
  */
 static std::ostream& operator<<(std::ostream& os, const Severity& log_severity)
 {
+    #ifndef ESP_PLATFORM
     Log* log = dynamic_cast<Log*>(os.rdbuf());
+    #else
+    Log *log = (Log *)(os.rdbuf());
+    #endif
     if (log != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(log->mutex_);
@@ -1013,8 +1059,12 @@ static std::ostream& operator<<(std::ostream& os, const Severity& log_severity)
 
 static std::ostream& operator<<(std::ostream& os, const Type& log_type)
 {
+    #ifndef ESP_PLATFORM
     Log* log = dynamic_cast<Log*>(os.rdbuf());
-    if (log != nullptr)
+    #else
+    Log *log = (Log *)(os.rdbuf());
+    #endif
+   if (log != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(log->mutex_);
         log->metadata_.type = log_type;
@@ -1024,7 +1074,11 @@ static std::ostream& operator<<(std::ostream& os, const Type& log_type)
 
 static std::ostream& operator<<(std::ostream& os, const Timestamp& timestamp)
 {
+    #ifndef ESP_PLATFORM
     Log* log = dynamic_cast<Log*>(os.rdbuf());
+    #else
+    Log *log = (Log *)(os.rdbuf());
+    #endif
     if (log != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(log->mutex_);
@@ -1039,7 +1093,11 @@ static std::ostream& operator<<(std::ostream& os, const Timestamp& timestamp)
 
 static std::ostream& operator<<(std::ostream& os, const Tag& tag)
 {
+    #ifndef ESP_PLATFORM
     Log* log = dynamic_cast<Log*>(os.rdbuf());
+    #else
+    Log *log = (Log *)(os.rdbuf());
+    #endif
     if (log != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(log->mutex_);
@@ -1054,8 +1112,12 @@ static std::ostream& operator<<(std::ostream& os, const Tag& tag)
 
 static std::ostream& operator<<(std::ostream& os, const Function& function)
 {
+     #ifndef ESP_PLATFORM
     Log* log = dynamic_cast<Log*>(os.rdbuf());
-    if (log != nullptr)
+    #else
+    Log *log = (Log *)(os.rdbuf());
+    #endif
+   if (log != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(log->mutex_);
         log->metadata_.function = function;
@@ -1069,7 +1131,11 @@ static std::ostream& operator<<(std::ostream& os, const Function& function)
 
 static std::ostream& operator<<(std::ostream& os, const Conditional& conditional)
 {
+    #ifndef ESP_PLATFORM
     Log* log = dynamic_cast<Log*>(os.rdbuf());
+    #else
+    Log *log = (Log *)(os.rdbuf());
+    #endif
     if (log != nullptr)
     {
         std::lock_guard<std::recursive_mutex> lock(log->mutex_);
