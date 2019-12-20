@@ -19,7 +19,7 @@
 #ifndef CONTROL_SESSION_H
 #define CONTROL_SESSION_H
 
-#include "common/queue.h"
+#include "common/snap_queue.h"
 #include "message/message.hpp"
 #include "server_settings.hpp"
 #include <atomic>

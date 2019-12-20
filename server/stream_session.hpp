@@ -19,7 +19,7 @@
 #ifndef STREAM_SESSION_H
 #define STREAM_SESSION_H
 
-#include "common/queue.h"
+#include "common/snap_queue.h"
 #include "message/message.hpp"
 #include "streamreader/stream_manager.hpp"
 #include <atomic>

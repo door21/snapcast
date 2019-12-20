@@ -27,7 +27,7 @@
 #include <thread>
 #include <vector>
 
-#include "common/queue.h"
+#include "common/snap_queue.h"
 #include "common/sample_format.hpp"
 #include "control_server.hpp"
 #include "jsonrpcpp.hpp"

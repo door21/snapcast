@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef SNAP_QUEUE_H
+#define SNAP_QUEUE_H
 
 #include <atomic>
 #include <condition_variable>
