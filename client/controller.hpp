@@ -33,12 +33,15 @@
 #elif HAS_COREAUDIO
 #include "player/coreaudio_player.hpp"
 #elif ESP_PLATFORM
-#include <esp32_player.hpp>
+#include "player/esp32_player.hpp"
 #endif
 #include "client_connection.hpp"
 #include "metadata.hpp"
 #include "stream.hpp"
 
+#ifdef ESP_PLATFORM
+#include <freertos/FreeRTOS.h>
+#endif
 
 /// Forwards PCM data to the audio player
 /**
@@ -61,15 +64,19 @@ public:
     /// Implementation of MessageReceiver.
     /// Used for async exception reporting
     void onException(ClientConnection* connection, shared_exception_ptr exception) override;
+    void worker();
 
 private:
-    void worker();
     bool sendTimeSyncMessage(long after = 1000);
     std::string hostId_;
     std::string meta_callback_;
     size_t instance_;
     std::atomic<bool> active_;
+    #ifdef ESP_PLATFORM
+    TaskHandle_t controllerTask_;
+    #else    
     std::thread controllerThread_;
+    #endif
     SampleFormat sampleFormat_;
     PcmDevice pcmDevice_;
     int latency_;

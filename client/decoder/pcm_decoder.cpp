@@ -17,9 +17,15 @@
 ***/
 
 #include "pcm_decoder.hpp"
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
 #include "common/endian.hpp"
 #include "common/snap_exception.hpp"
+#else
+#include <aixlog.hpp>
+#include <endian.hpp>
+#include <snap_exception.hpp>
+#endif
 
 namespace decoder
 {

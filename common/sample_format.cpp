@@ -20,10 +20,17 @@
 #include <sstream>
 #include <vector>
 
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
 #include "common/str_compat.hpp"
 #include "common/utils.hpp"
 #include "common/utils/string_utils.hpp"
+#else
+#include <aixlog.hpp>
+#include <str_compat.hpp>
+#include <utils.hpp>
+#include <utils/string_utils.hpp>
+#endif
 #include "sample_format.hpp"
 
 

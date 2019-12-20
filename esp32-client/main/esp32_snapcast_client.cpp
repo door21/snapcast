@@ -56,16 +56,17 @@ void wifi_connect_func(void *pvParams){
    vTaskDelete(NULL);
 }
 
-//static Controller controller("esp32-hostid", 1, NULL);
+static std::string hostid = "esp32-snap-client";
+static Controller controller(hostid, 1, NULL);
 void run_connection_func(void *pv){
 
    while(true){
       xEventGroupWaitBits(eventGroup, EVENT_GROUP_WIFI_CONNECTED, pdTRUE, pdTRUE, portMAX_DELAY);
       ESP_LOGI(log_tag, "About to start controller");
       std::string str = SERVER_HOST;
-      //PcmDevice device;
+      PcmDevice device;
       ESP_LOGI(log_tag, "Ready to call start...");
-      //controller.start(device, str, SERVER_PORT, 100);
+      controller.start(device, str, SERVER_PORT, 100);
    }
 }
 

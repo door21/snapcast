@@ -17,9 +17,15 @@
 ***/
 
 #include "client_connection.hpp"
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
 #include "common/snap_exception.hpp"
 #include "common/str_compat.hpp"
+#else
+#include <aixlog.hpp>
+#include <snap_exception.hpp>
+#include <str_compat.hpp>
+#endif
 #include "message/hello.hpp"
 #include <iostream>
 #include <mutex>
@@ -64,6 +70,12 @@ std::string ClientConnection::getMacAddress()
     return mac;
 }
 
+#ifdef ESP_PLATFORM
+void reader_function(void *pv){
+  ClientConnection *param = (ClientConnection *)pv;
+  param->reader();
+}
+#endif
 
 void ClientConnection::start()
 {
@@ -78,10 +90,15 @@ void ClientConnection::start()
     //	setsockopt(socket->native_handle(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     //	setsockopt(socket->native_handle(), SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
     socket_.connect(*iterator);
+    LOG(DEBUG) << "Connected!!!\n";
     SLOG(NOTICE) << "Connected to " << socket_.remote_endpoint().address().to_string() << endl;
     active_ = true;
     sumTimeout_ = chronos::msec(0);
+    #ifdef ESP32
+    xTaskCreate(reader_function, "reader", 8192, this, 5, &reader_task_);
+    #else
     readerThread_ = new thread(&ClientConnection::reader, this);
+    #endif
 }
 
 
@@ -90,24 +107,32 @@ void ClientConnection::stop()
     active_ = false;
     try
     {
+        #ifndef ESP_PLATFORM
         boost::system::error_code ec;
+        #else
+        asio::error_code ec;
+        #endif
         socket_.shutdown(ASIO_NS::ip::tcp::socket::shutdown_both, ec);
         if (ec)
             LOG(ERROR) << "Error in socket shutdown: " << ec.message() << endl;
         socket_.close(ec);
         if (ec)
             LOG(ERROR) << "Error in socket close: " << ec.message() << endl;
+        #ifndef ESP_PLATFORM
         if (readerThread_)
         {
             LOG(DEBUG) << "joining readerThread\n";
             readerThread_->join();
             delete readerThread_;
         }
+        #endif
     }
     catch (...)
     {
     }
+    #ifndef ESP_PLATFORM
     readerThread_ = nullptr;
+    #endif
     LOG(DEBUG) << "readerThread terminated\n";
 }
 

@@ -35,12 +35,22 @@ Player::Player(const PcmDevice& pcmDevice, std::shared_ptr<Stream> stream)
 {
 }
 
+#ifdef ESP_PLATFORM
+void player_function(void *pv){
+  Player *param = (Player *)pv;
+  param->worker();
+}
+#endif
 
 
 void Player::start()
 {
     active_ = true;
+    #ifdef ESP_PLATFORM
+    xTaskCreate(player_function, "player", 8192, this, 5, &player_task_);
+    #else
     playerThread_ = thread(&Player::worker, this);
+    #endif
 }
 
 
@@ -56,7 +66,9 @@ void Player::stop()
     if (active_)
     {
         active_ = false;
+        #ifndef ESP_PLATFORM
         playerThread_.join();
+        #endif
     }
 }
 

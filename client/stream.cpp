@@ -17,7 +17,11 @@
 ***/
 
 #include "stream.hpp"
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
+#else
+#include <aixlog.hpp>
+#endif
 #include "time_provider.hpp"
 #include <cmath>
 #include <iostream>

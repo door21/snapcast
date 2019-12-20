@@ -17,12 +17,19 @@
 ***/
 
 #include "time_provider.hpp"
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
+#else
+#include <aixlog.hpp>
+#endif
 
 
 TimeProvider::TimeProvider() : diffToServer_(0)
 {
     diffBuffer_.setSize(200);
+    #ifdef ESP_PLATFORM
+    mutex_ = xSemaphoreCreateMutex();
+    #endif
 }
 
 
@@ -40,7 +47,12 @@ void TimeProvider::setDiffToServer(double ms)
     static int32_t lastTimeSync = 0;
     timeval now;
     chronos::systemtimeofday(&now);
-
+    #ifdef ESP_PLATFORM
+    if(xSemaphoreTake(mutex_, 10/portTICK_PERIOD_MS) != pdTRUE){
+        LOG(ERROR) << "Could not lock access to server time diff\n";
+        return;
+    }
+    #endif
     /// clear diffBuffer if last update is older than a minute
     if (!diffBuffer_.empty() && (std::abs(now.tv_sec - lastTimeSync) > 60))
     {
@@ -52,6 +64,9 @@ void TimeProvider::setDiffToServer(double ms)
 
     diffBuffer_.add(ms * 1000);
     diffToServer_ = diffBuffer_.median(3);
+    #ifdef ESP_PLATFORM
+    xSemaphoreGive(mutex_);
+    #endif
     //	LOG(INFO) << "setDiffToServer: " << ms << ", diff: " << diffToServer_ / 1000.f << "\n";
 }
 

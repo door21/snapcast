@@ -40,6 +40,7 @@
 
 #ifdef ESP_PLATFORM
 #define ASIO_NS asio
+#include <freertos/FreeRTOS.h>
 #else
 #define ASIO_NS boost::asio
 #endif
@@ -113,9 +114,9 @@ public:
     {
         return active_;
     }
+    virtual void reader();
 
 protected:
-    virtual void reader();
 
     void socketRead(void* to, size_t bytes);
     void getNextMessage();
@@ -130,7 +131,11 @@ protected:
     uint16_t reqId_;
     std::string host_;
     size_t port_;
+    #ifdef ESP32
+    TaskHandle_t reader_task_;
+    #else
     std::thread* readerThread_;
+    #endif    
     chronos::msec sumTimeout_;
 };
 

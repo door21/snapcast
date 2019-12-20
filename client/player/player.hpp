@@ -25,6 +25,7 @@
 #else
 #include <aixlog.hpp>
 #include <endian.hpp>
+#include <freertos/FreeRTOS.h>
 #endif
 #include "pcm_device.hpp"
 #include "stream.hpp"
@@ -49,9 +50,9 @@ public:
     virtual void setMute(bool mute);
     virtual void start();
     virtual void stop();
+    virtual void worker() = 0;
 
 protected:
-    virtual void worker() = 0;
 
     void setVolume_poly(double volume, double exp);
     void setVolume_exp(double volume, double base);
@@ -68,7 +69,11 @@ protected:
 
     std::atomic<bool> active_;
     std::shared_ptr<Stream> stream_;
+    #ifdef ESP_PLATFORM
+    TaskHandle_t player_task_;
+    #else
     std::thread playerThread_;
+    #endif
     PcmDevice pcmDevice_;
     double volume_;
     bool muted_;

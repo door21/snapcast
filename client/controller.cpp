@@ -30,14 +30,26 @@
 #if defined(HAS_OPUS)
 #include "decoder/opus_decoder.hpp"
 #endif
+#ifndef ESP_PLATFORM
 #include "common/aixlog.hpp"
 #include "common/snap_exception.hpp"
+#else
+#include <aixlog.hpp>
+#include <snap_exception.hpp>
+#endif
 #include "message/hello.hpp"
 #include "message/time.hpp"
 #include "time_provider.hpp"
 
 using namespace std;
 
+#ifdef ESP_PLATFORM
+// Thanks to https://stackoverflow.com/a/24609331
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+#endif
 
 Controller::Controller(const std::string& hostId, size_t instance, std::shared_ptr<MetadataAdapter> meta)
     : MessageReceiver(), hostId_(hostId), instance_(instance), active_(false), latency_(0), stream_(nullptr), decoder_(nullptr), player_(nullptr), meta_(meta),
@@ -132,6 +144,8 @@ void Controller::onMessageReceived(ClientConnection* /*connection*/, const msg::
         player_ = make_unique<OpenslPlayer>(pcmDevice_, stream_);
 #elif HAS_COREAUDIO
         player_ = make_unique<CoreAudioPlayer>(pcmDevice_, stream_);
+#elif ESP_PLATFORM
+        player_ = make_unique<Esp32Player>(pcmDevice_, stream_);
 #else
         throw SnapException("No audio player support");
 #endif
@@ -167,13 +181,24 @@ bool Controller::sendTimeSyncMessage(long after)
     return true;
 }
 
+#ifdef ESP_PLATFORM
+void controller_task(void *pv){
+    Controller *param = (Controller*)pv;
+    param->worker();
+}
+#endif
+
 
 void Controller::start(const PcmDevice& pcmDevice, const std::string& host, size_t port, int latency)
 {
     pcmDevice_ = pcmDevice;
     latency_ = latency;
     clientConnection_.reset(new ClientConnection(this, host, port));
+    #ifdef ESP_PLATFORM
+    xTaskCreate(controller_task, "controller", 8192, this, 5, &controllerTask_ );
+    #else
     controllerThread_ = thread(&Controller::worker, this);
+    #endif
 }
 
 
@@ -181,7 +206,9 @@ void Controller::stop()
 {
     LOG(DEBUG) << "Stopping Controller" << endl;
     active_ = false;
+    #ifndef ESP_PLATFORM
     controllerThread_.join();
+    #endif
     clientConnection_->stop();
 }
 

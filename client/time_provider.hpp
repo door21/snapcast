@@ -19,7 +19,13 @@
 #ifndef TIME_PROVIDER_H
 #define TIME_PROVIDER_H
 
+#ifndef ESP_PLATFORM
 #include "common/time_defs.hpp"
+#else
+#include <time_defs.hpp>
+#include <freertos/freertos.h>
+#include <freertos/semphr.h>
+#endif
 #include "double_buffer.hpp"
 #include "message/message.hpp"
 #include <atomic>
@@ -82,7 +88,12 @@ private:
     void operator=(TimeProvider const&); // Don't implement
 
     DoubleBuffer<chronos::usec::rep> diffBuffer_;
+    #ifndef ESP_PLATFORM
     std::atomic<chronos::usec::rep> diffToServer_;
+    #else
+        SemaphoreHandle_t mutex_;
+        chronos::usec::rep diffToServer_;
+    #endif
 };
 
 

@@ -19,8 +19,13 @@
 #ifndef HELLO_MSG_H
 #define HELLO_MSG_H
 
+#ifndef ESP_PLATFORM
 #include "common/str_compat.hpp"
 #include "common/utils.hpp"
+#else
+#include <str_compat.hpp>
+#include <utils.hpp>
+#endif
 #include "json_message.hpp"
 #include <string>
 
